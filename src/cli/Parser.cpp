@@ -1,5 +1,5 @@
 #include "Parser.h"
-#include "../disk/VirtualDisk.h"
+#include "../fs/FatFileSystem.h"
 #include <iostream>
 #include <sstream>
 
@@ -8,6 +8,7 @@ Parser::Parser(const std::string &host_file) : host_filename(host_file) {}
 void Parser::run()
 {
     std::string line;
+    FatFileSystem fs{host_filename};
 
     while (getline(std::cin, line))
     {
@@ -29,9 +30,7 @@ void Parser::run()
 
             int32_t total_bytes = std::stoi(size) * 1024 * 1024;
 
-            VirtualDisk disk(host_filename);
-            if (disk.create_empty(total_bytes))
-                std::cout << "FS vytvoren" << std::endl;
+            fs.format(total_bytes);
         }
         else
         {

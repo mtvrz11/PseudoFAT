@@ -1,4 +1,4 @@
-#pragma once;
+#pragma once
 #include <cstdint>
 
 // specialni znacky ve FAT tabulce

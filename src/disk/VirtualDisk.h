@@ -20,7 +20,7 @@ class VirtualDisk
 public:
     VirtualDisk(const std::string &name);
 
-    bool create_empty(int32_t total_bites);
+    bool create_empty(int32_t total_bytes);
 
     bool write_bytes(int32_t offset, const void *data, size_t size);
 

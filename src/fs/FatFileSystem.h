@@ -7,10 +7,10 @@ class FatFileSystem
 {
     VirtualDisk disk;
     description boot_record;
-    bool is_formated;
+    bool is_formatted;
 
 public:
     FatFileSystem(const std::string &host_file);
 
-    bool format(int32_t megabytes);
+    bool format(int32_t total_bytes);
 };
