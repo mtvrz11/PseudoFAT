@@ -1,3 +1,5 @@
+#include "./cli/Parser.h"
+
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -10,35 +12,10 @@ int main(int argc, char *argv[])
         std::cerr << "CHYBA! Ocekavan jeden parametr!" << std::endl;
     }
 
-    std::string fs_filename = argv[1];
+    std::string host_filename = argv[1];
 
-    std::string line;
-    while (true)
-    {
-        if (!getline(std::cin, line))
-            break; // !!! proc?
-        if (line.empty())
-            continue;
-
-        std::stringstream ss(line);
-        std::string command;
-        ss >> command;
-
-        if (command == "exit")
-            break;
-        else if (command == "format")
-        {
-            int size;
-            ss >> size;
-
-            // TODO: dodelat formatovani...
-            std::cout << "OK" << std::endl;
-        }
-        else
-        {
-            // TODO: ostatni prikazy
-        }
-    }
+    Parser parser(host_filename);
+    parser.run();
 
     return 0;
 }
