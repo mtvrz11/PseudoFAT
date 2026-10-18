@@ -1,12 +1,13 @@
 #pragma once
 #include <string>
+#include "../fs/FatFileSystem.h"
 
 class Parser
 {
-    std::string host_filename;
+    FatFileSystem &fs;
 
 public:
-    Parser(const std::string &host_file);
+    Parser(FatFileSystem &fs);
 
     void run();
 };

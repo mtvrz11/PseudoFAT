@@ -3,12 +3,11 @@
 #include <iostream>
 #include <sstream>
 
-Parser::Parser(const std::string &host_file) : host_filename(host_file) {}
+Parser::Parser(FatFileSystem &fs) : fs(fs) {}
 
 void Parser::run()
 {
     std::string line;
-    FatFileSystem fs{host_filename};
 
     while (getline(std::cin, line))
     {

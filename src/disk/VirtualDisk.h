@@ -16,8 +16,11 @@
 class VirtualDisk
 {
     std::string filename;
+    std::fstream file;
 
 public:
+    bool is_open = false;
+
     VirtualDisk(const std::string &name);
 
     bool create_empty(int32_t total_bytes);

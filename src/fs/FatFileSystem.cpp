@@ -6,7 +6,37 @@
 constexpr int32_t cluster_size = 4096;
 
 FatFileSystem::FatFileSystem(const std::string &host_file)
-    : disk(host_file), is_formatted(false) {}
+    : disk(host_file), is_formatted(false)
+{
+    boot_fs();
+}
+
+// ??? musi to mit navratovou hodnotu, kdyz ji nikde nepouzivam?
+bool FatFileSystem::boot_fs()
+{
+    is_formatted = false;
+
+    if (!disk.is_open)
+        return false;
+
+    // nedari se cist z disku
+    if (!disk.read_bytes(0, &boot_record, sizeof(description)))
+        return false;
+
+    // podpis neni spravny - neni to muj fs
+    if (std::strcmp(boot_record.signature, SIGNATURE) != 0)
+        return false;
+
+    fat_table.assign(boot_record.fat_entries_count, 0);
+    size_t fat_bytes = boot_record.fat_entries_count * sizeof(FAT_UNUSED);
+
+    if (!disk.read_bytes(boot_record.fat1_start_address, &fat_table, fat_bytes))
+        return false;
+
+    std::cout << "nacteno" << std::endl;
+    is_formatted = true;
+    return true;
+}
 
 bool FatFileSystem::format(int32_t total_bytes)
 {
@@ -16,7 +46,7 @@ bool FatFileSystem::format(int32_t total_bytes)
         return false;
     }
 
-    std::strncpy(boot_record.signature, "mtvrz", 6);
+    std::strncpy(boot_record.signature, SIGNATURE, 6);
     boot_record.disk_size = total_bytes;
     boot_record.cluster_size = cluster_size;
     boot_record.cluster_count = (total_bytes - sizeof(description)) / (cluster_size + 2 * sizeof(FAT_UNUSED));
