@@ -11,6 +11,8 @@ void Parser::run()
 
     while (getline(std::cin, line))
     {
+        // std::cout << "nacitaci smycka bezi" << std::endl;
+
         if (line.empty())
             continue;
 
@@ -31,6 +33,8 @@ void Parser::run()
 
             fs.format(total_bytes);
         }
+        else if (cmd == "pwd")
+            fs.pwd();
         else
         {
             std::cout << "Zadan neznamy prikaz: " << cmd << std::endl;

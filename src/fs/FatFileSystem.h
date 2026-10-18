@@ -10,11 +10,13 @@ class FatFileSystem
     description boot_record;
     bool is_formatted;
     std::vector<int32_t> fat_table;
+    std::string current_path = "/";
 
-    bool boot_fs();
+    void boot_fs();
 
 public:
     FatFileSystem(const std::string &host_file);
 
     bool format(int32_t total_bytes);
+    void pwd();
 };
