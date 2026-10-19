@@ -1,11 +1,13 @@
 #pragma once
 #include <cstdint>
+#pragma pack(push, 1)
 
 // specialni znacky ve FAT tabulce
 constexpr int32_t FAT_UNUSED = INT32_MAX - 1;
 constexpr int32_t FAT_FILE_END = INT32_MAX - 2;
 constexpr int32_t FAT_BAD_CLUSTER = INT32_MAX - 3;
 constexpr char SIGNATURE[6] = "mtvrz";
+constexpr int32_t CLUSTER_SIZE = 4096;
 
 struct description
 {
@@ -26,3 +28,5 @@ struct directory_item
     int32_t size;          // velikost souboru v bajtech, u adresáře hodnota 0
     int32_t start_cluster; // počáteční cluster položky
 };
+
+#pragma pack(pop)

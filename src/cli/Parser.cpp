@@ -25,16 +25,21 @@ void Parser::run()
         else if (cmd == "format")
         {
             std::string size;
-
             ss >> size;
-            size = size.substr(0, size.size() - 2); // oriznuti poslednich dvou znaku (MB)
-
+            size = size.substr(0, size.size() - 2); // oriznuti MB z retezce
             int32_t total_bytes = std::stoi(size) * 1024 * 1024;
-
             fs.format(total_bytes);
         }
         else if (cmd == "pwd")
             fs.pwd();
+        else if (cmd == "ls")
+            fs.ls(); // !!! doplnit nacteni cesty
+        else if (cmd == "mkdir")
+        {
+            std::string name;
+            ss >> name;
+            fs.mkdir(name);
+        }
         else
         {
             std::cout << "Zadan neznamy prikaz: " << cmd << std::endl;

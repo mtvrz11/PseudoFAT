@@ -56,5 +56,5 @@ bool VirtualDisk::read_bytes(int32_t offset, void *buffer, size_t size)
     file.seekg(offset);
     file.read(reinterpret_cast<char *>(buffer), size);
 
-    return true;
+    return file.good();
 }
