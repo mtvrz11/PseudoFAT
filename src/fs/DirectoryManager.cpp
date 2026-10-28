@@ -53,7 +53,8 @@ bool DirectoryManager::add_item(int32_t parent_cluster, const std::string &name,
     std::strncpy(item.item_name, name.data(), sizeof(item.item_name));
 
     // zapis na disk
-    return disk.write_bytes(get_item_offset(parent_cluster, free_slot), &item, sizeof(directory_item));
+    disk.write_bytes(get_item_offset(parent_cluster, free_slot), &item, sizeof(directory_item));
+    return true;
 }
 
 void DirectoryManager::format_new_directory(int32_t new_cluster, int32_t parent_cluster)
@@ -62,18 +63,25 @@ void DirectoryManager::format_new_directory(int32_t new_cluster, int32_t parent_
     std::vector<directory_item> content(max_items_count, {0});
     disk.write_bytes(get_cluster_offset(new_cluster), content.data(), CLUSTER_SIZE); // zapis noveho clusteru na disk
     add_item(new_cluster, "..", true, 0, parent_cluster);                            // pridani odkazu na rodice
+    add_item(new_cluster, ".", true, 0, new_cluster);                                // pridani odkazu na sebe sama
 }
 
-bool DirectoryManager::directory_contains(int32_t cluster_idx, const std::string &name)
+bool DirectoryManager::find_item(const std::vector<int32_t> &parent_chain, const std::string &name, directory_item &out_item)
 {
-    auto items = get_directory_content(cluster_idx);
-
-    for (int i = 0; i < items.size(); i++)
+    for (int32_t cluster : parent_chain)
     {
-        if (std::strncmp(items[i].item_name, name.data(), sizeof(directory_item::item_name)) == 0)
-            return true;
+        auto items = get_directory_content(cluster);
+        for (const auto item : items)
+        {
+            if (item.item_name[0] == '\0')
+                continue;
+            if (strncmp(item.item_name, name.data(), sizeof(item.item_name)) == 0)
+            {
+                out_item = item;
+                return true;
+            }
+        }
     }
-
     return false;
 }
 

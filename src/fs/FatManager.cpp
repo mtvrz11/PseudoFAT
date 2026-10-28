@@ -1,4 +1,4 @@
-#include "FatManager.h"
+#include "VFS.h"
 #include <cstring>
 
 FatManager::FatManager(VirtualDisk &disk, description &boot_record)
@@ -9,9 +9,7 @@ bool FatManager::load_from_disk()
     if (!disk.is_open)
         return false;
 
-    // nedari se cist z disku
-    if (!disk.read_bytes(0, &boot_record, sizeof(description)))
-        return false;
+    disk.read_bytes(0, &boot_record, sizeof(description));
 
     // podpis neni spravny - neni to muj fs
     if (std::strncmp(boot_record.signature, SIGNATURE, sizeof(boot_record.signature)) != 0)
@@ -20,9 +18,7 @@ bool FatManager::load_from_disk()
     fat_table.assign(boot_record.fat_entries_count, 0);
     size_t fat_bytes = boot_record.fat_entries_count * sizeof(FAT_UNUSED);
 
-    if (!disk.read_bytes(boot_record.fat1_start_address, fat_table.data(), fat_bytes))
-        return false;
-
+    disk.read_bytes(boot_record.fat1_start_address, fat_table.data(), fat_bytes);
     return true;
 }
 
@@ -139,4 +135,6 @@ int32_t FatManager::append_cluster(int32_t tail_cluster)
     int32_t val = FAT_FILE_END;
     disk.write_bytes(boot_record.fat1_start_address + offset_new, &val, sizeof(val));
     disk.write_bytes(boot_record.fat2_start_address + offset_new, &val, sizeof(val));
+
+    return new_cluster;
 }

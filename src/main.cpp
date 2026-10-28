@@ -1,5 +1,5 @@
-#include "./cli/Parser.h"
-#include "./fs/FatFileSystem.h"
+#include "./cli/Shell.h"
+#include "./fs/VFS.h"
 
 #include <iostream>
 #include <sstream>
@@ -16,10 +16,10 @@ int main(int argc, char *argv[])
 
     std::string host_filename = argv[1];
 
-    FatFileSystem fs(host_filename);
+    VFS fs(host_filename);
 
-    Parser parser(fs);
-    parser.run();
+    Shell shell(fs);
+    shell.run();
 
     return 0;
 }

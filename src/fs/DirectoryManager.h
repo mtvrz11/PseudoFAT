@@ -3,7 +3,6 @@
 #include <string>
 #include "../disk/VirtualDisk.h"
 #include "Structures.h"
-#include "FatManager.h"
 
 class DirectoryManager
 {
@@ -21,9 +20,11 @@ public:
 
     bool add_item(int32_t parent_cluster, const std::string &name, bool is_dir, int32_t item_size, int32_t target_cluster);
 
+    bool remove_item(int32_t parent_cluster, const std::string &name);
+
     void format_new_directory(int32_t new_cluster, int32_t parent_cluster);
 
-    bool directory_contains(int32_t cluster_idx, const std::string &name); // jestli obsahuje soubor s danym jmenem (mozno rozsirit obecne na cestu...)
+    bool find_item(const std::vector<int32_t> &parent_chain, const std::string &name, directory_item &out_item);
 
     void clean_cluster(int32_t cluster);
 };

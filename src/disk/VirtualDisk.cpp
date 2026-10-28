@@ -1,4 +1,6 @@
 #include "VirtualDisk.h"
+#include "../exceptions/Exceptions.h"
+
 #include <iostream>
 #include <fstream>
 
@@ -9,7 +11,7 @@ VirtualDisk::VirtualDisk(const std::string &filename)
         is_open = true;
 }
 
-bool VirtualDisk::create_empty(int32_t total_bytes)
+void VirtualDisk::create_empty(int32_t total_bytes)
 {
     // pokud byl soubor otevren, zavru ho, abych ho mohl premazat a znovu naformatovat
     if (file.is_open())
@@ -21,7 +23,7 @@ bool VirtualDisk::create_empty(int32_t total_bytes)
     std::ofstream f(filename, std::ios::binary | std::ios::trunc);
 
     if (!f.is_open())
-        return false;
+        throw DiskException("Virtual disk file is not open.");
 
     // natazeni na pozadovanou velikost
     f.seekp(total_bytes - 1);
@@ -30,31 +32,33 @@ bool VirtualDisk::create_empty(int32_t total_bytes)
     f.close();                                                            // uzavreni souboru pro zapis
     file.open(filename, std::ios::binary | std::ios::in | std::ios::out); // a nasledne otevreni pro cteni i zapis
     if (!file.is_open())
-        return false;
+        throw DiskException("Virtual disk file is not open.");
 
     is_open = true;
-    return true;
 }
 
-bool VirtualDisk::write_bytes(int32_t offset, const void *data, size_t size)
+void VirtualDisk::write_bytes(int32_t offset, const void *data, size_t size)
 {
     if (!file.is_open())
-        return false;
+        throw DiskException("Virtual disk file is not open.");
 
     file.seekp(offset);
     file.write(reinterpret_cast<const char *>(data), size);
 
+    if (!file.good())
+        throw DiskException("Failed to write " + std::to_string(size) + " bytes at offset " + std::to_string(offset));
+
     file.flush();
-    return true;
 }
 
-bool VirtualDisk::read_bytes(int32_t offset, void *buffer, size_t size)
+void VirtualDisk::read_bytes(int32_t offset, void *buffer, size_t size)
 {
     if (!file.is_open())
-        return false;
+        throw DiskException("Virtual disk file is not open.");
 
     file.seekg(offset);
     file.read(reinterpret_cast<char *>(buffer), size);
 
-    return file.good();
+    if (!file.good())
+        throw DiskException("Failed to write " + std::to_string(size) + " bytes at offset " + std::to_string(offset));
 }
