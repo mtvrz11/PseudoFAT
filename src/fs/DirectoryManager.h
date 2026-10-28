@@ -20,11 +20,13 @@ public:
 
     bool add_item(int32_t parent_cluster, const std::string &name, bool is_dir, int32_t item_size, int32_t target_cluster);
 
-    bool remove_item(int32_t parent_cluster, const std::string &name);
+    bool remove_item(const std::vector<int32_t> &parent_chain, std::string &name);
 
     void format_new_directory(int32_t new_cluster, int32_t parent_cluster);
 
     bool find_item(const std::vector<int32_t> &parent_chain, const std::string &name, directory_item &out_item);
 
     void clean_cluster(int32_t cluster);
+
+    bool is_directory_empty(const std::vector<int32_t> &chain);
 };

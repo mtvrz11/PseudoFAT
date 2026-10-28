@@ -82,8 +82,23 @@ VfsStatus VFS::mkdir(const std::string &path)
 VfsStatus VFS::rmdir(const std::string &path)
 {
     auto result = resolve_path(path);
-    if (!result.is_valid)
+    if (!result.is_valid || result.target_cluster == -1 || !result.is_directory)
         return VfsStatus::PATH_NOT_FOUND;
+
+    // nesmim smazat aktualni slozku ani root
+    if (result.target_cluster == 0 || result.target_cluster == current_cluster)
+        return VfsStatus::PATH_NOT_FOUND;
+
+    auto target_chain = fat_manager.get_cluster_chain(result.target_cluster);
+    if (!dir_manager.is_directory_empty(target_chain))
+        return VfsStatus::NOT_EMPTY;
+
+    auto parent_chain = fat_manager.get_cluster_chain(result.parent_cluster);
+    if (!dir_manager.remove_item(parent_chain, result.target_name))
+        return VfsStatus::PATH_NOT_FOUND; // polozka nebyla nalezena - nemelo by k tomu dojit kvuli predchozi kontrole...
+
+    fat_manager.free_chain(result.target_cluster); // vymazani zaznamu z fat tabulky
+    return VfsStatus::OK;
 }
 
 VfsStatus VFS::cd(const std::string &path)

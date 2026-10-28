@@ -57,6 +57,28 @@ bool DirectoryManager::add_item(int32_t parent_cluster, const std::string &name,
     return true;
 }
 
+bool DirectoryManager::remove_item(const std::vector<int32_t> &parent_chain, std::string &name)
+{
+    for (int32_t cluster : parent_chain)
+    {
+        auto items = get_directory_content(cluster);
+        for (int i = 0; i < items.size(); i++)
+        {
+            if (items[i].item_name[0] == '\0')
+                continue;
+            if (std::strncmp(items[i].item_name, name.c_str(), sizeof(directory_item::item_name)) == 0)
+            {
+                directory_item clean_item;
+                std::memset(&clean_item, 0, sizeof(clean_item));
+
+                disk.write_bytes(get_item_offset(cluster, i), &clean_item, sizeof(clean_item));
+                return true; // smazano
+            }
+        }
+    }
+    return false; // polozka nenalezena
+}
+
 void DirectoryManager::format_new_directory(int32_t new_cluster, int32_t parent_cluster)
 {
     int32_t max_items_count = CLUSTER_SIZE / sizeof(directory_item);
@@ -89,4 +111,22 @@ void DirectoryManager::clean_cluster(int32_t cluster)
 {
     std::vector<char> buffer(CLUSTER_SIZE, {0});
     disk.write_bytes(get_cluster_offset(cluster), buffer.data(), CLUSTER_SIZE);
+}
+
+bool DirectoryManager::is_directory_empty(const std::vector<int32_t> &chain)
+{
+    for (int32_t cluster : chain)
+    {
+        auto items = get_directory_content(cluster);
+        for (const auto &item : items)
+        {
+            if (item.item_name[0] == '\0')
+                continue;
+
+            std::string name(item.item_name);
+            if (name != "." && name != "..")
+                return false; // realny soubor nebo podslozka - neni to prazdne
+        }
+    }
+    return true;
 }

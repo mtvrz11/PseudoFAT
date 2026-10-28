@@ -78,6 +78,13 @@ void Shell::register_commands()
         ss >> path;
         print_status(fs.cd(path));
     };
+
+    commands["rmdir"] = [this](std::stringstream &ss)
+    {
+        std::string path;
+        ss >> path;
+        print_status(fs.rmdir(path));
+    };
 }
 
 void Shell::run()
