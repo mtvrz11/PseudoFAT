@@ -36,3 +36,17 @@ struct LsResult
     VfsStatus status;
     std::vector<LsItem> items;
 };
+
+struct InfoItem
+{
+    std::string name;
+    bool is_directory;
+    int32_t size;
+    std::vector<int32_t> cluster_chain;
+};
+
+struct InfoResult
+{
+    VfsStatus status;
+    InfoItem item;
+};

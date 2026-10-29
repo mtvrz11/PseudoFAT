@@ -116,3 +116,27 @@ VfsStatus VFS::cd(const std::string &path)
     current_path = build_absolute_path(path);
     return VfsStatus::OK;
 }
+
+InfoResult VFS::info(const std::string &path)
+{
+    InfoResult result;
+
+    auto res_path = resolve_path(path);
+    if (!res_path.is_valid || res_path.target_cluster == -1)
+    {
+        result.status = VfsStatus::FILE_NOT_FOUND;
+        return result;
+    }
+
+    auto parent_chain = fat_manager.get_cluster_chain(res_path.parent_cluster);
+    directory_item item;
+    dir_manager.find_item(parent_chain, res_path.target_name, item);
+
+    result.status = VfsStatus::OK;
+    result.item.name = item.item_name;
+    result.item.is_directory = item.isDirectory;
+    result.item.size = item.size;
+    result.item.cluster_chain = fat_manager.get_cluster_chain(res_path.target_cluster);
+
+    return result;
+}

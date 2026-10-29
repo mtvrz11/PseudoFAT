@@ -119,6 +119,39 @@ void Shell::register_commands()
         ss >> path;
         print_status(fs.rm(path));
     };
+
+    commands["cat"] = [this](std::stringstream &ss)
+    {
+        std::string path;
+        ss >> path;
+        VfsStatus res = fs.cat(path, std::cout);
+        if (res == VfsStatus::OK)
+            std::cout << std::endl;
+        else
+            print_status(res);
+    };
+
+    commands["info"] = [this](std::stringstream &ss)
+    {
+        std::string path;
+        ss >> path;
+        InfoResult res = fs.info(path);
+        if (res.status != VfsStatus::OK)
+            print_status(res.status);
+        else
+        {
+            std::cout << res.item.name << " - " << (res.item.is_directory ? "dir" : "file") << " - size: " << res.item.size << " - ";
+            auto &clusters = res.item.cluster_chain;
+            for (size_t i = 0; i < clusters.size(); i++)
+            {
+                if (i == clusters.size() - 1)
+                    std::cout << clusters[i];
+                else
+                    std::cout << clusters[i] << ",";
+            }
+            std::cout << std::endl;
+        }
+    };
 }
 
 void Shell::run()

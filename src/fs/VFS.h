@@ -25,7 +25,7 @@ class VFS
     PathResult resolve_path(const std::string &path);
     std::string build_absolute_path(const std::string &path);
     void write_stream_to_chain(std::ifstream &hostfile, const std::vector<int32_t> chain, int32_t file_size);
-    void read_chain_to_stream(std::ofstream &hostfile, const std::vector<int32_t> chain, int32_t file_size);
+    void read_chain_to_stream(std::ostream &out_stream, const std::vector<int32_t> chain, int32_t file_size);
     int32_t get_cluster_offset(int32_t clusetr_idx);
 
 public:
@@ -44,4 +44,6 @@ public:
     VfsStatus cp(const std::string &from, const std::string &to);
     VfsStatus mv(const std::string &from, const std::string &to);
     VfsStatus rm(const std::string &path);
+    VfsStatus cat(const std::string &path, std::ostream &os);
+    InfoResult info(const std::string &path);
 };

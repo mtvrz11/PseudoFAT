@@ -1,6 +1,7 @@
 #include "VFS.h"
 
 #include <fstream>
+#include <ostream>
 
 void VFS::write_stream_to_chain(std::ifstream &hostfile, const std::vector<int32_t> chain, int32_t file_size)
 {
@@ -25,7 +26,7 @@ void VFS::write_stream_to_chain(std::ifstream &hostfile, const std::vector<int32
     }
 }
 
-void VFS::read_chain_to_stream(std::ofstream &hostfile, const std::vector<int32_t> chain, int32_t file_size)
+void VFS::read_chain_to_stream(std::ostream &hostfile, const std::vector<int32_t> chain, int32_t file_size)
 {
     std::vector<char> buffer(boot_record.cluster_size, 0);
     int32_t bytes_left = file_size;
@@ -168,6 +169,23 @@ VfsStatus VFS::rm(const std::string &path)
     auto parent_chain = fat_manager.get_cluster_chain(result.parent_cluster);
     dir_manager.remove_item(parent_chain, result.target_name);
     fat_manager.free_chain(result.target_cluster);
+
+    return VfsStatus::OK;
+}
+
+VfsStatus VFS::cat(const std::string &path, std::ostream &os)
+{
+    auto result = resolve_path(path);
+    if (!result.is_valid || result.target_cluster == -1 || result.is_directory)
+        return VfsStatus::FILE_NOT_FOUND;
+
+    auto parent_chain = fat_manager.get_cluster_chain(result.parent_cluster);
+    directory_item item;
+    dir_manager.find_item(parent_chain, result.target_name, item);
+
+    auto target_chain = fat_manager.get_cluster_chain(result.target_cluster);
+
+    read_chain_to_stream(os, target_chain, item.size);
 
     return VfsStatus::OK;
 }
