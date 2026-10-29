@@ -24,6 +24,9 @@ class VFS
     std::vector<std::string> split_path(const std::string &path);
     PathResult resolve_path(const std::string &path);
     std::string build_absolute_path(const std::string &path);
+    void write_stream_to_chain(std::ifstream &hostfile, const std::vector<int32_t> chain, int32_t file_size);
+    void read_chain_to_stream(std::ofstream &hostfile, const std::vector<int32_t> chain, int32_t file_size);
+    int32_t get_cluster_offset(int32_t clusetr_idx);
 
 public:
     VFS(const std::string &host_file);
@@ -36,4 +39,9 @@ public:
     VfsStatus mkdir(const std::string &path);
     VfsStatus cd(const std::string &path);
     VfsStatus rmdir(const std::string &path);
+    VfsStatus incp(const std::string &from, const std::string &to);
+    VfsStatus outcp(const std::string &from, const std::string &to);
+    VfsStatus cp(const std::string &from, const std::string &to);
+    VfsStatus mv(const std::string &from, const std::string &to);
+    VfsStatus rm(const std::string &path);
 };

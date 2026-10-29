@@ -1,6 +1,10 @@
 #include "VFS.h"
-#include <iostream> // pozdeji mozne smazat !!!
 #include <vector>
+
+int32_t VFS::get_cluster_offset(int32_t cluster_idx)
+{
+    return boot_record.data_start_address + (cluster_idx * boot_record.cluster_size);
+}
 
 bool VFS::add_to_directory(int32_t parent_cluster, const std::string &name, bool is_dir, int32_t size, int32_t target_cluster)
 {

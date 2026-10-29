@@ -16,7 +16,7 @@ static const std::unordered_map<VfsStatus, std::string> status_messages = {
     {VfsStatus::CANNOT_CREATE_FILE, "CANNOT CREATE FILE"},
     {VfsStatus::DISK_FULL, "DISK FULL"},
     {VfsStatus::DISK_NOT_FORMATTED, "DISK NOT FORMATTED"},
-    {VfsStatus::FILE_NOT_OFUND, "FILE NOT FOUND"},
+    {VfsStatus::FILE_NOT_FOUND, "FILE NOT FOUND"},
     {VfsStatus::IS_DIRECTORY, "IS DIRECTORY"},
     {VfsStatus::NOT_EMPTY, "NOT EMPTY"},
     {VfsStatus::PATH_NOT_FOUND, "PATH NOT FOUND"},
@@ -57,7 +57,6 @@ void Shell::register_commands()
             for (const auto &item : res.items)
             {
                 if (item.is_directory)
-                std:
                     std::cout << "DIR: " << item.name << std::endl;
                 else
                     std::cout << "FILE: " << item.name << std::endl;
@@ -85,6 +84,41 @@ void Shell::register_commands()
         ss >> path;
         print_status(fs.rmdir(path));
     };
+
+    commands["incp"] = [this](std::stringstream &ss)
+    {
+        std::string from, to;
+        ss >> from >> to;
+        print_status(fs.incp(from, to));
+    };
+
+    commands["outcp"] = [this](std::stringstream &ss)
+    {
+        std::string from, to;
+        ss >> from >> to;
+        print_status(fs.outcp(from, to));
+    };
+
+    commands["mv"] = [this](std::stringstream &ss)
+    {
+        std::string from, to;
+        ss >> from >> to;
+        print_status(fs.mv(from, to));
+    };
+
+    commands["cp"] = [this](std::stringstream &ss)
+    {
+        std::string from, to;
+        ss >> from >> to;
+        print_status(fs.cp(from, to));
+    };
+
+    commands["rm"] = [this](std::stringstream &ss)
+    {
+        std::string path;
+        ss >> path;
+        print_status(fs.rm(path));
+    };
 }
 
 void Shell::run()
@@ -111,7 +145,10 @@ void Shell::run()
         }
 
         if (cmd != "format" && !fs.is_ready())
+        {
             print_status(VfsStatus::DISK_NOT_FORMATTED);
+            continue;
+        }
 
         try
         {

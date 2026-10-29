@@ -21,7 +21,7 @@ std::vector<directory_item> DirectoryManager::get_directory_content(int32_t clus
     int32_t max_items_count = CLUSTER_SIZE / sizeof(directory_item);
     std::vector<directory_item> items(max_items_count); // vytvoreni noveho prazdneho pole polozek
 
-    disk.read_bytes(get_cluster_offset(cluster_idx), items.data(), CLUSTER_SIZE);
+    disk.read_bytes(get_cluster_offset(cluster_idx), items.data(), items.size() * sizeof(directory_item));
 
     return items;
 }
@@ -81,11 +81,9 @@ bool DirectoryManager::remove_item(const std::vector<int32_t> &parent_chain, std
 
 void DirectoryManager::format_new_directory(int32_t new_cluster, int32_t parent_cluster)
 {
-    int32_t max_items_count = CLUSTER_SIZE / sizeof(directory_item);
-    std::vector<directory_item> content(max_items_count, {0});
-    disk.write_bytes(get_cluster_offset(new_cluster), content.data(), CLUSTER_SIZE); // zapis noveho clusteru na disk
-    add_item(new_cluster, "..", true, 0, parent_cluster);                            // pridani odkazu na rodice
-    add_item(new_cluster, ".", true, 0, new_cluster);                                // pridani odkazu na sebe sama
+    clean_cluster(new_cluster);
+    add_item(new_cluster, "..", true, 0, parent_cluster); // pridani odkazu na rodice
+    add_item(new_cluster, ".", true, 0, new_cluster);     // pridani odkazu na sebe sama
 }
 
 bool DirectoryManager::find_item(const std::vector<int32_t> &parent_chain, const std::string &name, directory_item &out_item)
@@ -93,7 +91,7 @@ bool DirectoryManager::find_item(const std::vector<int32_t> &parent_chain, const
     for (int32_t cluster : parent_chain)
     {
         auto items = get_directory_content(cluster);
-        for (const auto item : items)
+        for (const auto &item : items)
         {
             if (item.item_name[0] == '\0')
                 continue;

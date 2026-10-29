@@ -7,7 +7,7 @@ constexpr int32_t FAT_UNUSED = INT32_MAX - 1;
 constexpr int32_t FAT_FILE_END = INT32_MAX - 2;
 constexpr int32_t FAT_BAD_CLUSTER = INT32_MAX - 3;
 constexpr char SIGNATURE[6] = "mtvrz";
-constexpr int32_t CLUSTER_SIZE = 4096;
+constexpr int32_t CLUSTER_SIZE = 1024;
 
 struct description
 {

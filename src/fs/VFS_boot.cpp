@@ -34,6 +34,9 @@ VfsStatus VFS::format(int32_t total_bytes)
     dir_manager.format_new_directory(0, 0); // vrchol adresaroveho stromu - odkazuje sam na sebe
 
     is_formatted = true;
+    current_cluster = 0;
+    current_path = "/";
+
     return VfsStatus::OK;
 }
 

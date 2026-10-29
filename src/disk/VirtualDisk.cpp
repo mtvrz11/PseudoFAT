@@ -60,5 +60,5 @@ void VirtualDisk::read_bytes(int32_t offset, void *buffer, size_t size)
     file.read(reinterpret_cast<char *>(buffer), size);
 
     if (!file.good())
-        throw DiskException("Failed to write " + std::to_string(size) + " bytes at offset " + std::to_string(offset));
+        throw DiskException("Failed to read " + std::to_string(size) + " bytes at offset " + std::to_string(offset));
 }
