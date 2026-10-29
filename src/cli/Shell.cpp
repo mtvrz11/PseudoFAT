@@ -140,7 +140,12 @@ void Shell::register_commands()
             print_status(res.status);
         else
         {
-            std::cout << res.item.name << " - " << (res.item.is_directory ? "dir" : "file") << " - size: " << res.item.size << " - ";
+            std::cout << res.item.name << " - ";
+            if (res.item.is_directory)
+                std::cout << "dir - ";
+            else
+                std::cout << "file - size: " << res.item.size << " - ";
+
             auto &clusters = res.item.cluster_chain;
             for (size_t i = 0; i < clusters.size(); i++)
             {
@@ -152,6 +157,68 @@ void Shell::register_commands()
             std::cout << std::endl;
         }
     };
+
+    commands["load"] = [this](std::stringstream &ss)
+    {
+        std::string path;
+        ss >> path;
+        execute_load(path);
+    };
+}
+
+void Shell::execute_line(const std::string &line)
+{
+    if (line.empty())
+        return;
+
+    std::stringstream ss(line);
+    std::string cmd;
+    ss >> cmd;
+
+    if (cmd == "exit")
+        return;
+
+    auto it = commands.find(cmd);
+    if (it == commands.end())
+    {
+        std::cout << "INVALID COMMAND" << std::endl;
+        return;
+    }
+
+    if (cmd != "format" && !fs.is_ready())
+    {
+        print_status(VfsStatus::DISK_NOT_FORMATTED);
+        return;
+    }
+
+    try
+    {
+        it->second(ss);
+    }
+    catch (const DiskException &e)
+    {
+        std::cout << "HARDWARE DISK ERROR: " << e.what() << std::endl;
+    }
+    catch (const std::exception &e)
+    {
+        std::cout << "FATA ERROR: " << e.what() << std::endl;
+    }
+}
+
+void Shell::execute_load(const std::string &input_file)
+{
+    std::ifstream script_file(input_file);
+    if (!script_file.is_open())
+    {
+        print_status(VfsStatus::FILE_NOT_FOUND);
+        return;
+    }
+
+    std::string line;
+    while (std::getline(script_file, line))
+    {
+        execute_line(line);
+    }
 }
 
 void Shell::run()
@@ -163,37 +230,9 @@ void Shell::run()
         if (line.empty())
             continue;
 
-        std::stringstream ss(line);
-        std::string cmd;
-        ss >> cmd;
-
-        if (cmd == "exit")
+        if (line == "exit")
             break;
 
-        auto it = commands.find(cmd);
-        if (it == commands.end())
-        {
-            std::cout << "INVALID COMMAND" << std::endl;
-            continue;
-        }
-
-        if (cmd != "format" && !fs.is_ready())
-        {
-            print_status(VfsStatus::DISK_NOT_FORMATTED);
-            continue;
-        }
-
-        try
-        {
-            it->second(ss);
-        }
-        catch (const DiskException &e)
-        {
-            std::cout << "HARDWARE DISK ERROR: " << e.what() << std::endl;
-        }
-        catch (const std::exception &e)
-        {
-            std::cout << "FATA ERROR: " << e.what() << std::endl;
-        }
+        execute_line(line);
     }
 }

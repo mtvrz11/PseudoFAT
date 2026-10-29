@@ -14,6 +14,8 @@ class Shell
 
     void print_status(VfsStatus status);
     void register_commands();
+    void execute_line(const std::string &line);
+    void execute_load(const std::string &input_file);
 
 public:
     Shell(VFS &fs);
