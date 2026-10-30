@@ -124,9 +124,7 @@ void Shell::register_commands()
         std::string path;
         ss >> path;
         VfsStatus res = fs.cat(path, std::cout);
-        if (res == VfsStatus::OK)
-            std::cout << std::endl;
-        else
+        if (res != VfsStatus::OK)
             print_status(res);
     };
 
@@ -189,7 +187,7 @@ void Shell::register_commands()
             for (const auto &bug : res.bugs)
             {
                 print_status(VfsStatus::BUG_DETECTED);
-                std::cout << "DESCRIPTION: ";
+                std::cout << "   DESCRIPTION: ";
                 if (bug.bug == BugType::BAD_SIZE)
                     std::cout << "Size in directory does not match number of clusters allocated in FAT table. ";
                 else if (bug.bug == BugType::CYCLE)
