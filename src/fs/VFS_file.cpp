@@ -26,7 +26,7 @@ void VFS::write_stream_to_chain(std::ifstream &hostfile, const std::vector<int32
     }
 }
 
-void VFS::read_chain_to_stream(std::ostream &hostfile, const std::vector<int32_t> chain, int32_t file_size)
+void VFS::read_chain_to_stream(std::ostream &out_stream, const std::vector<int32_t> chain, int32_t file_size)
 {
     std::vector<char> buffer(boot_record.cluster_size, 0);
     int32_t bytes_left = file_size;
@@ -38,7 +38,7 @@ void VFS::read_chain_to_stream(std::ostream &hostfile, const std::vector<int32_t
         int32_t chunk_size = std::min(bytes_left, boot_record.cluster_size);
 
         disk.read_bytes(get_cluster_offset(cluster), buffer.data(), boot_record.cluster_size);
-        hostfile.write(buffer.data(), chunk_size);
+        out_stream.write(buffer.data(), chunk_size);
         bytes_left -= chunk_size;
     }
 }
@@ -112,7 +112,8 @@ VfsStatus VFS::cp(const std::string &from, const std::string &to)
     auto src_parent_chain = fat_manager.get_cluster_chain(path_from.parent_cluster);
 
     directory_item item;
-    dir_manager.find_item(src_parent_chain, path_from.target_name, item);
+    if (!dir_manager.find_item(src_parent_chain, path_from.target_name, item))
+        return VfsStatus::FILE_NOT_FOUND;
     int32_t file_size = item.size;
 
     auto src_chain = fat_manager.get_cluster_chain(path_from.target_cluster);
@@ -133,7 +134,11 @@ VfsStatus VFS::cp(const std::string &from, const std::string &to)
         disk.write_bytes(get_cluster_offset(dest_chain[i]), buffer.data(), CLUSTER_SIZE);
     }
 
-    add_to_directory(path_to.parent_cluster, path_to.target_name, false, file_size, dest_chain[0]);
+    if (!add_to_directory(path_to.parent_cluster, path_to.target_name, false, file_size, dest_chain[0]))
+    {
+        fat_manager.free_chain(dest_chain[0]);
+        return VfsStatus::DISK_FULL;
+    }
 
     return VfsStatus::OK;
 }
@@ -153,8 +158,11 @@ VfsStatus VFS::mv(const std::string &from, const std::string &to)
 
     auto src_parent_chain = fat_manager.get_cluster_chain(path_from.parent_cluster);
     directory_item item;
-    dir_manager.find_item(src_parent_chain, path_from.target_name, item);
-    add_to_directory(path_to.parent_cluster, path_to.target_name, false, item.size, item.start_cluster);
+    if (!dir_manager.find_item(src_parent_chain, path_from.target_name, item))
+        return VfsStatus::FILE_NOT_FOUND; // nemelo by k tomu dojit kvuli predhozi kontrole...
+
+    if (!add_to_directory(path_to.parent_cluster, path_to.target_name, false, item.size, item.start_cluster))
+        return VfsStatus::DISK_FULL; // polozka ale zustane na puvodnim miste - nedojde k jejimu smazani z adresare
     dir_manager.remove_item(src_parent_chain, path_from.target_name);
 
     return VfsStatus::OK;
@@ -181,7 +189,8 @@ VfsStatus VFS::cat(const std::string &path, std::ostream &os)
 
     auto parent_chain = fat_manager.get_cluster_chain(result.parent_cluster);
     directory_item item;
-    dir_manager.find_item(parent_chain, result.target_name, item);
+    if (!dir_manager.find_item(parent_chain, result.target_name, item))
+        return VfsStatus::FILE_NOT_FOUND; // nemelo by k tomu dojit kvuli predchozi kontrole...
 
     auto target_chain = fat_manager.get_cluster_chain(result.target_cluster);
 

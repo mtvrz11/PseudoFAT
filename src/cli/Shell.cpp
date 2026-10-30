@@ -17,10 +17,9 @@ static const std::unordered_map<VfsStatus, std::string> status_messages = {
     {VfsStatus::DISK_FULL, "DISK FULL"},
     {VfsStatus::DISK_NOT_FORMATTED, "DISK NOT FORMATTED"},
     {VfsStatus::FILE_NOT_FOUND, "FILE NOT FOUND"},
-    {VfsStatus::IS_DIRECTORY, "IS DIRECTORY"},
     {VfsStatus::NOT_EMPTY, "NOT EMPTY"},
     {VfsStatus::PATH_NOT_FOUND, "PATH NOT FOUND"},
-};
+    {VfsStatus::BUG_DETECTED, "BUG DETECTED"}};
 
 void Shell::print_status(VfsStatus status)
 {
@@ -164,6 +163,43 @@ void Shell::register_commands()
         ss >> path;
         execute_load(path);
     };
+
+    commands["bug"] = [this](std::stringstream &ss)
+    {
+        std::string path;
+        int type = 3; // defaultne bad size
+        ss >> path;
+        if (!ss.eof())
+            ss >> type;
+        if (type == 1)
+            print_status(fs.bug(path, BugType::OUT_OF_RANGE));
+        else if (type == 2)
+            print_status(fs.bug(path, BugType::CYCLE));
+        else
+            print_status(fs.bug(path, BugType::BAD_SIZE));
+    };
+
+    commands["check"] = [this](std::stringstream &ss)
+    {
+        auto res = fs.check();
+        if (res.status == VfsStatus::OK)
+            print_status(res.status);
+        else
+        {
+            for (const auto &bug : res.bugs)
+            {
+                print_status(VfsStatus::BUG_DETECTED);
+                std::cout << "DESCRIPTION: ";
+                if (bug.bug == BugType::BAD_SIZE)
+                    std::cout << "Size in directory does not match number of clusters allocated in FAT table. ";
+                else if (bug.bug == BugType::CYCLE)
+                    std::cout << "Cicle in FAT table detected. ";
+                else if (bug.bug == BugType::OUT_OF_RANGE)
+                    std::cout << "Cluster number out of range of the FAT table. ";
+                std::cout << (bug.is_directory ? "Dir: " : "File: ") << bug.name << std::endl;
+            }
+        }
+    };
 }
 
 void Shell::execute_line(const std::string &line)
@@ -176,7 +212,10 @@ void Shell::execute_line(const std::string &line)
     ss >> cmd;
 
     if (cmd == "exit")
+    {
+        is_running = false;
         return;
+    }
 
     auto it = commands.find(cmd);
     if (it == commands.end())
@@ -185,7 +224,7 @@ void Shell::execute_line(const std::string &line)
         return;
     }
 
-    if (cmd != "format" && !fs.is_ready())
+    if (cmd != "format" && cmd != "load" && !fs.is_ready())
     {
         print_status(VfsStatus::DISK_NOT_FORMATTED);
         return;
@@ -215,7 +254,7 @@ void Shell::execute_load(const std::string &input_file)
     }
 
     std::string line;
-    while (std::getline(script_file, line))
+    while (is_running && std::getline(script_file, line))
     {
         execute_line(line);
     }
@@ -224,15 +263,10 @@ void Shell::execute_load(const std::string &input_file)
 void Shell::run()
 {
     std::string line;
+    is_running = true;
 
-    while (getline(std::cin, line))
+    while (is_running && getline(std::cin, line))
     {
-        if (line.empty())
-            continue;
-
-        if (line == "exit")
-            break;
-
         execute_line(line);
     }
 }

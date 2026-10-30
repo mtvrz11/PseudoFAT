@@ -11,6 +11,7 @@ class Shell
 {
     VFS &fs;
     std::unordered_map<std::string, std::function<void(std::stringstream &ss)>> commands;
+    bool is_running = false;
 
     void print_status(VfsStatus status);
     void register_commands();

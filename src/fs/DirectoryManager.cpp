@@ -57,7 +57,7 @@ bool DirectoryManager::add_item(int32_t parent_cluster, const std::string &name,
     return true;
 }
 
-bool DirectoryManager::remove_item(const std::vector<int32_t> &parent_chain, std::string &name)
+void DirectoryManager::remove_item(const std::vector<int32_t> &parent_chain, std::string &name)
 {
     for (int32_t cluster : parent_chain)
     {
@@ -66,17 +66,16 @@ bool DirectoryManager::remove_item(const std::vector<int32_t> &parent_chain, std
         {
             if (items[i].item_name[0] == '\0')
                 continue;
-            if (std::strncmp(items[i].item_name, name.c_str(), sizeof(directory_item::item_name)) == 0)
+            if (std::string(items[i].item_name) == name)
             {
-                directory_item clean_item;
-                std::memset(&clean_item, 0, sizeof(clean_item));
+                directory_item clean_item = {0};
 
                 disk.write_bytes(get_item_offset(cluster, i), &clean_item, sizeof(clean_item));
-                return true; // smazano
+                return; // smazano
             }
         }
     }
-    return false; // polozka nenalezena
+    // pokud nahodou polozka nebyla nalezena, bude po jejim nesmazani adresar v pozadovanem stavu - bez ni
 }
 
 void DirectoryManager::format_new_directory(int32_t new_cluster, int32_t parent_cluster)
@@ -95,7 +94,7 @@ bool DirectoryManager::find_item(const std::vector<int32_t> &parent_chain, const
         {
             if (item.item_name[0] == '\0')
                 continue;
-            if (strncmp(item.item_name, name.data(), sizeof(item.item_name)) == 0)
+            if (std::string(item.item_name) == name)
             {
                 out_item = item;
                 return true;
@@ -127,4 +126,25 @@ bool DirectoryManager::is_directory_empty(const std::vector<int32_t> &chain)
         }
     }
     return true;
+}
+
+bool DirectoryManager::corrupt_item_size(const std::vector<int32_t> &parent_chain, const std::string &name, int32_t bad_size)
+{
+    for (int32_t cluster : parent_chain)
+    {
+        auto items = get_directory_content(cluster);
+        for (size_t i = 0; i < items.size(); i++)
+        {
+            if (items[i].item_name[0] == '\0')
+                continue;
+
+            if (std::string(items[i].item_name) == name)
+            {
+                items[i].size = bad_size;
+                disk.write_bytes(get_item_offset(cluster, i), &items[i], sizeof(directory_item));
+                return true;
+            }
+        }
+    }
+    return false;
 }

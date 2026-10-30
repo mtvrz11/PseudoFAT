@@ -46,4 +46,6 @@ public:
     VfsStatus rm(const std::string &path);
     VfsStatus cat(const std::string &path, std::ostream &os);
     InfoResult info(const std::string &path);
+    VfsStatus bug(const std::string &path, BugType type);
+    CheckResult check();
 };

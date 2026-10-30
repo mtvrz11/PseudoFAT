@@ -4,6 +4,13 @@
 FatManager::FatManager(VirtualDisk &disk, description &boot_record)
     : disk(disk), boot_record(boot_record) {}
 
+void FatManager::flush_fat()
+{
+    size_t fat_bytes = fat_table.size() * sizeof(FAT_UNUSED);
+    disk.write_bytes(boot_record.fat1_start_address, fat_table.data(), fat_bytes);
+    disk.write_bytes(boot_record.fat2_start_address, fat_table.data(), fat_bytes);
+}
+
 bool FatManager::load_from_disk()
 {
     if (!disk.is_open)
@@ -26,9 +33,7 @@ void FatManager::format_new()
 {
     fat_table.assign(boot_record.fat_entries_count, FAT_UNUSED);
     fat_table[0] = FAT_FILE_END; // na idx 0 je korenovy doresar
-
-    disk.write_bytes(boot_record.fat1_start_address, fat_table.data(), fat_table.size() * sizeof(FAT_UNUSED));
-    disk.write_bytes(boot_record.fat2_start_address, fat_table.data(), fat_table.size() * sizeof(FAT_UNUSED));
+    flush_fat();
 }
 
 std::vector<int32_t> FatManager::allocate_chain(int32_t count)
@@ -54,17 +59,9 @@ std::vector<int32_t> FatManager::allocate_chain(int32_t count)
             fat_table[current] = FAT_FILE_END;
         else
             fat_table[current] = allocated[i + 1];
-
-        int32_t val = fat_table[current];
-        int32_t offset = current * sizeof(FAT_UNUSED);
-        disk.write_bytes(boot_record.fat1_start_address + offset, &val, sizeof(val));
-        disk.write_bytes(boot_record.fat2_start_address + offset, &val, sizeof(val));
     }
 
-    // bylo by lepsi volat nekolikrat pridani jen jedne polozky, nebo radsi zkopirovat celou fat tabulku, ale jen jednou ???
-    // disk.write_bytes(boot_record.fat1_start_address, fat_table.data(), fat_table.size() * sizeof(FAT_UNUSED));
-    // disk.write_bytes(boot_record.fat2_start_address, fat_table.data(), fat_table.size() * sizeof(FAT_UNUSED));
-
+    flush_fat();
     return allocated;
 }
 
@@ -74,20 +71,18 @@ void FatManager::free_chain(int32_t start_cluster)
         return;
 
     int32_t current = start_cluster;
+    bool modified = false;
 
     while (current != FAT_FILE_END && current != FAT_UNUSED)
     {
         int32_t next = fat_table[current];
         fat_table[current] = FAT_UNUSED;
-
-        // opet nekdy pripadne prepsat na jedine volani zmeny...
-        int32_t val = FAT_UNUSED;
-        int32_t offset = current * sizeof(FAT_UNUSED);
-        disk.write_bytes(boot_record.fat1_start_address + offset, &val, sizeof(FAT_UNUSED));
-        disk.write_bytes(boot_record.fat2_start_address + offset, &val, sizeof(FAT_UNUSED));
-
+        modified = true;
         current = next;
     }
+
+    if (modified)
+        flush_fat();
 }
 
 std::vector<int32_t> FatManager::get_cluster_chain(int32_t start_cluster)
@@ -99,6 +94,8 @@ std::vector<int32_t> FatManager::get_cluster_chain(int32_t start_cluster)
     int32_t current = start_cluster;
     while (current != FAT_FILE_END && current != FAT_UNUSED)
     {
+        if (chain.size() >= fat_table.size())
+            break; // ochrana pred poskozenim cyklem ve fat tabulce, aby mi nezamrzla RAM
         chain.push_back(current);
         current = fat_table[current];
     }
@@ -127,14 +124,29 @@ int32_t FatManager::append_cluster(int32_t tail_cluster)
     fat_table[tail_cluster] = new_cluster;
     fat_table[new_cluster] = FAT_FILE_END;
 
-    int32_t offset_tail = tail_cluster * sizeof(FAT_UNUSED);
-    disk.write_bytes(boot_record.fat1_start_address + offset_tail, &new_cluster, sizeof(new_cluster));
-    disk.write_bytes(boot_record.fat2_start_address + offset_tail, &new_cluster, sizeof(new_cluster));
-
-    int32_t offset_new = new_cluster * sizeof(FAT_UNUSED);
-    int32_t val = FAT_FILE_END;
-    disk.write_bytes(boot_record.fat1_start_address + offset_new, &val, sizeof(val));
-    disk.write_bytes(boot_record.fat2_start_address + offset_new, &val, sizeof(val));
+    flush_fat();
 
     return new_cluster;
+}
+
+void FatManager::corrupt_fat_entry(int32_t cluster, int32_t bad_value)
+{
+    if (cluster >= 0 && cluster < fat_table.size())
+    {
+        fat_table[cluster] = bad_value;
+        flush_fat();
+    }
+}
+
+int32_t FatManager::get_fat_entry_raw(int32_t cluster) const
+{
+    if (cluster >= 0 && cluster < fat_table.size())
+        return fat_table[cluster];
+    else
+        return FAT_BAD_CLUSTER;
+}
+
+int32_t FatManager::get_fat_size() const
+{
+    return fat_table.size();
 }

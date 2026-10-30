@@ -98,9 +98,7 @@ VfsStatus VFS::rmdir(const std::string &path)
         return VfsStatus::NOT_EMPTY;
 
     auto parent_chain = fat_manager.get_cluster_chain(result.parent_cluster);
-    if (!dir_manager.remove_item(parent_chain, result.target_name))
-        return VfsStatus::PATH_NOT_FOUND; // polozka nebyla nalezena - nemelo by k tomu dojit kvuli predchozi kontrole...
-
+    dir_manager.remove_item(parent_chain, result.target_name);
     fat_manager.free_chain(result.target_cluster); // vymazani zaznamu z fat tabulky
     return VfsStatus::OK;
 }
@@ -128,9 +126,23 @@ InfoResult VFS::info(const std::string &path)
         return result;
     }
 
+    if (res_path.target_cluster == 0)
+    {
+        result.status = VfsStatus::OK;
+        result.item.name = "/";
+        result.item.is_directory = true;
+        result.item.cluster_chain = {0};
+        return result;
+    }
+
     auto parent_chain = fat_manager.get_cluster_chain(res_path.parent_cluster);
     directory_item item;
-    dir_manager.find_item(parent_chain, res_path.target_name, item);
+    if (!dir_manager.find_item(parent_chain, res_path.target_name, item))
+    {
+        // nemelo by k tomu dojit kvuli predchozi kontrole...
+        result.status = VfsStatus::FILE_NOT_FOUND;
+        return result;
+    }
 
     result.status = VfsStatus::OK;
     result.item.name = item.item_name;

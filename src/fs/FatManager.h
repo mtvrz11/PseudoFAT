@@ -9,6 +9,7 @@ class FatManager
     VirtualDisk &disk;
     description &boot_record;
     std::vector<int32_t> fat_table;
+    void flush_fat();
 
 public:
     FatManager(VirtualDisk &disk, description &boot_record);
@@ -18,4 +19,7 @@ public:
     void free_chain(int32_t start_cluster);
     std::vector<int32_t> get_cluster_chain(int32_t start_cluster);
     int32_t append_cluster(int32_t tail_cluster);
+    void corrupt_fat_entry(int32_t cluster, int32_t bad_value);
+    int32_t get_fat_entry_raw(int32_t cluster) const;
+    int32_t get_fat_size() const;
 };

@@ -11,9 +11,9 @@ enum class VfsStatus
     ALREADY_EXIST,
     DISK_FULL,
     FILE_NOT_FOUND,
-    IS_DIRECTORY,
     NOT_EMPTY,
-    CANNOT_CREATE_FILE
+    CANNOT_CREATE_FILE,
+    BUG_DETECTED
 };
 
 struct PathResult
@@ -49,4 +49,24 @@ struct InfoResult
 {
     VfsStatus status;
     InfoItem item;
+};
+
+enum class BugType
+{
+    OUT_OF_RANGE = 1,
+    CYCLE = 2,
+    BAD_SIZE = 3
+};
+
+struct CheckItem
+{
+    bool is_directory;
+    std::string name;
+    BugType bug;
+};
+
+struct CheckResult
+{
+    VfsStatus status = VfsStatus::OK;
+    std::vector<CheckItem> bugs;
 };
