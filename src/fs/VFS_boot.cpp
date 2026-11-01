@@ -17,8 +17,9 @@ void VFS::boot_fs()
 
 VfsStatus VFS::format(int32_t total_bytes)
 {
-    disk.create_empty(total_bytes);
+    disk.create_empty(total_bytes); // vytvoreni novy soubor
 
+    // naplneni zavadece a zapsani na disk
     std::strncpy(boot_record.signature, SIGNATURE, sizeof(boot_record.signature));
     boot_record.disk_size = total_bytes;
     boot_record.cluster_size = CLUSTER_SIZE;
@@ -30,7 +31,7 @@ VfsStatus VFS::format(int32_t total_bytes)
 
     disk.write_bytes(0, &boot_record, sizeof(description));
 
-    fat_manager.format_new();
+    fat_manager.format_new();               // vytvoreni prazdne fat tabulky (root automaticky nsataven na 0. cluster)
     dir_manager.format_new_directory(0, 0); // vrchol adresaroveho stromu - odkazuje sam na sebe
 
     is_formatted = true;

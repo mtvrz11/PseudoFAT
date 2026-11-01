@@ -5,12 +5,12 @@
 
 void VFS::write_stream_to_chain(std::ifstream &hostfile, const std::vector<int32_t> chain, int32_t file_size)
 {
-    std::vector<char> buffer(boot_record.cluster_size, 0);
-    int32_t bytes_left = file_size;
+    std::vector<char> buffer(boot_record.cluster_size, 0); // velikost clusteru
+    int32_t bytes_left = file_size;                        // kolik bytu jeste  zbyva nacist
 
     for (int32_t cluster : chain)
     {
-        int32_t chunk_size = std::min(bytes_left, boot_record.cluster_size);
+        int32_t chunk_size = std::min(bytes_left, boot_record.cluster_size); // kolik bytu mam nacitat, abych nesahl mimo soubor
 
         if (chunk_size == 0)                            // soubor nulove vleikosti, ktery chci zapsat do jednoho clusteru
             std::fill(buffer.begin(), buffer.end(), 0); // vycisteni clusteru od nahodnych dat
@@ -29,13 +29,14 @@ void VFS::write_stream_to_chain(std::ifstream &hostfile, const std::vector<int32
 void VFS::read_chain_to_stream(std::ostream &out_stream, const std::vector<int32_t> chain, int32_t file_size)
 {
     std::vector<char> buffer(boot_record.cluster_size, 0);
-    int32_t bytes_left = file_size;
+    int32_t bytes_left = file_size; // kolik bytu jeste zbyva nacist
+
     for (int32_t cluster : chain)
     {
         if (bytes_left <= 0)
             break;
 
-        int32_t chunk_size = std::min(bytes_left, boot_record.cluster_size);
+        int32_t chunk_size = std::min(bytes_left, boot_record.cluster_size); // kolik bytu nacist, abych nesahl za hranice souboru
 
         disk.read_bytes(get_cluster_offset(cluster), buffer.data(), boot_record.cluster_size);
         out_stream.write(buffer.data(), chunk_size);
@@ -45,12 +46,14 @@ void VFS::read_chain_to_stream(std::ostream &out_stream, const std::vector<int32
 
 VfsStatus VFS::incp(const std::string &from, const std::string &to)
 {
-    std::ifstream host_file(from, std::ios::binary | std::ios::ate); // binarni s kurzorem na konci filu
+    // otevreni zdrojoveho souboru
+    std::ifstream host_file(from, std::ios::binary | std::ios::ate); // binarni se ctecim kurzorem na konci filu
     if (!host_file.is_open())
         return VfsStatus::FILE_NOT_FOUND;
 
+    // zjisteni velikosti souboru
     int32_t file_size = static_cast<int32_t>(host_file.tellg());
-    host_file.seekg(0, std::ios::beg);
+    host_file.seekg(0, std::ios::beg); // vraceni kurzoru na zacatek, abych cetl zepredu
 
     auto result = resolve_path(to);
     if (!result.is_valid)
@@ -64,6 +67,7 @@ VfsStatus VFS::incp(const std::string &from, const std::string &to)
     if (clusters_needed == 0)
         clusters_needed = 1; // prazdny soubor dostane jeden cluster
 
+    // alokace clusteru pro soubor
     auto chain = fat_manager.allocate_chain(clusters_needed);
     if (chain.empty())
         return VfsStatus::DISK_FULL;
@@ -72,7 +76,7 @@ VfsStatus VFS::incp(const std::string &from, const std::string &to)
 
     if (!add_to_directory(result.parent_cluster, result.target_name, false, file_size, chain[0]))
     {
-        fat_manager.free_chain(chain[0]);
+        fat_manager.free_chain(chain[0]); // pokud se nepodari pridat adresarovou polozku, uvolnime retezec ve FAT
         return VfsStatus::DISK_FULL;
     }
 
@@ -106,6 +110,7 @@ VfsStatus VFS::outcp(const std::string &from, const std::string &to)
 VfsStatus VFS::cp(const std::string &from, const std::string &to)
 {
     auto path_from = resolve_path(from);
+    // musi to byt validni cesta k existujicimu souboru
     if (!path_from.is_valid || path_from.target_cluster == -1 || path_from.is_directory)
         return VfsStatus::FILE_NOT_FOUND;
 
@@ -113,18 +118,21 @@ VfsStatus VFS::cp(const std::string &from, const std::string &to)
 
     directory_item item;
     if (!dir_manager.find_item(src_parent_chain, path_from.target_name, item))
-        return VfsStatus::FILE_NOT_FOUND;
+        return VfsStatus::FILE_NOT_FOUND; // nemelo by k tomu dojit kvuli predchozi kontrole...
     int32_t file_size = item.size;
 
     auto src_chain = fat_manager.get_cluster_chain(path_from.target_cluster);
 
     auto path_to = resolve_path(to);
+    // musi to vyt validni cesta k zatim neexistujicimu souboru
     if (!path_to.is_valid)
         return VfsStatus::PATH_NOT_FOUND;
     if (path_to.target_cluster != -1)
-        return VfsStatus::ALREADY_EXIST; // mam soubor prepisovat nebo ne ??? stejne tak u incp a mv !!!
+        return VfsStatus::ALREADY_EXIST;
 
     auto dest_chain = fat_manager.allocate_chain(src_chain.size());
+    if (dest_chain.empty())
+        return VfsStatus::DISK_FULL;
 
     // fyzicke nakopirovani souboru na dalsi misto na disku
     std::vector<char> buffer(CLUSTER_SIZE);
@@ -143,14 +151,15 @@ VfsStatus VFS::cp(const std::string &from, const std::string &to)
     return VfsStatus::OK;
 }
 
-// jak chapat to mv -ma se zadavat cilova cesta vcetne nazvu souboru, nebo jen slozka ??? Asi vcetne souboru...
 VfsStatus VFS::mv(const std::string &from, const std::string &to)
 {
     auto path_from = resolve_path(from);
+    // zdroj musi byt cesta k existujicimu souboru
     if (!path_from.is_valid || path_from.target_cluster == -1 || path_from.is_directory)
         return VfsStatus::FILE_NOT_FOUND;
 
     auto path_to = resolve_path(to);
+    // cil musi byt cesta k zatim neexistujicimu souboru
     if (!path_to.is_valid)
         return VfsStatus::PATH_NOT_FOUND;
     if (path_to.target_cluster != -1)
@@ -163,7 +172,7 @@ VfsStatus VFS::mv(const std::string &from, const std::string &to)
 
     if (!add_to_directory(path_to.parent_cluster, path_to.target_name, false, item.size, item.start_cluster))
         return VfsStatus::DISK_FULL; // polozka ale zustane na puvodnim miste - nedojde k jejimu smazani z adresare
-    dir_manager.remove_item(src_parent_chain, path_from.target_name);
+    remove_from_directory(path_from.parent_cluster, path_from.target_name);
 
     return VfsStatus::OK;
 }
@@ -171,11 +180,11 @@ VfsStatus VFS::mv(const std::string &from, const std::string &to)
 VfsStatus VFS::rm(const std::string &path)
 {
     auto result = resolve_path(path);
+    // musi to byt cesta k existujicimu souboru
     if (!result.is_valid || result.target_cluster == -1 || result.is_directory)
         return VfsStatus::FILE_NOT_FOUND;
 
-    auto parent_chain = fat_manager.get_cluster_chain(result.parent_cluster);
-    dir_manager.remove_item(parent_chain, result.target_name);
+    remove_from_directory(result.parent_cluster, result.target_name);
     fat_manager.free_chain(result.target_cluster);
 
     return VfsStatus::OK;
@@ -184,6 +193,7 @@ VfsStatus VFS::rm(const std::string &path)
 VfsStatus VFS::cat(const std::string &path, std::ostream &os)
 {
     auto result = resolve_path(path);
+    // musi to byt cesta k existujicimu souboru
     if (!result.is_valid || result.target_cluster == -1 || result.is_directory)
         return VfsStatus::FILE_NOT_FOUND;
 

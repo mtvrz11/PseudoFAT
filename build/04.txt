@@ -1,0 +1,11 @@
+format 2MB
+mkdir a
+mkdir a
+incp host_in.txt a/soubor.txt
+rmdir a
+rmdir b
+cd b
+cat b
+cp neexistuje.txt b.txt
+rm a
+incp neexistuje_os.txt novy.txt

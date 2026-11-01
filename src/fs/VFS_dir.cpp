@@ -27,17 +27,35 @@ bool VFS::add_to_directory(int32_t parent_cluster, const std::string &name, bool
     return dir_manager.add_item(new_cluster, name, is_dir, size, target_cluster);
 }
 
+void VFS::remove_from_directory(int32_t parent_cluster, const std::string &name)
+{
+    auto chain = fat_manager.get_cluster_chain(parent_cluster);
+    dir_manager.remove_item(chain, name);
+
+    // projdu vsechny clustery, jestli jsem nejaky nevyprazdnil
+    for (int32_t cluster : chain)
+    {
+        // pokud je nejaky cluster prazdny, uvolnim ho
+        if (dir_manager.is_directory_empty({cluster}))
+        {
+            fat_manager.free_cluster_in_chain(chain, cluster);
+            break;
+        }
+    }
+}
+
 LsResult VFS::ls(const std::string &path)
 {
     auto res_path = resolve_path(path);
     LsResult result;
-    if (!res_path.is_valid || !res_path.is_directory)
+    if (!res_path.is_valid || !res_path.is_directory) // musi to byt valisni cesta k adresari
     {
         result.status = VfsStatus::PATH_NOT_FOUND;
         return result;
     }
 
     auto chain = fat_manager.get_cluster_chain(res_path.target_cluster);
+    // prochazim cluster po clusteru, polozku po polozce
     for (int32_t cluster : chain)
     {
         auto items = dir_manager.get_directory_content(cluster);
@@ -73,12 +91,14 @@ VfsStatus VFS::mkdir(const std::string &path)
         return VfsStatus::DISK_FULL;
 
     auto new_cluster = chain[0];
+    // pridani do rodicovskeho adresare
     if (!add_to_directory(result.parent_cluster, result.target_name, true, 0, new_cluster))
     {
-        fat_manager.free_chain(new_cluster);
+        fat_manager.free_chain(new_cluster); // pokud to zhavarovalo, uklidim FAT tabulku
         return VfsStatus::DISK_FULL;
     }
 
+    // naformatovani noveho adresaren a cilovek clusteru adresare
     dir_manager.format_new_directory(new_cluster, result.parent_cluster);
     return VfsStatus::OK;
 }
@@ -86,27 +106,27 @@ VfsStatus VFS::mkdir(const std::string &path)
 VfsStatus VFS::rmdir(const std::string &path)
 {
     auto result = resolve_path(path);
+    // musi to byt validni cesta k existujicimu adresari
     if (!result.is_valid || result.target_cluster == -1 || !result.is_directory)
         return VfsStatus::PATH_NOT_FOUND;
 
     // nesmim smazat aktualni slozku ani root
     if (result.target_cluster == 0 || result.target_cluster == current_cluster)
-        return VfsStatus::PATH_NOT_FOUND;
+        return VfsStatus::PATH_NOT_FOUND; // TODO: mozna by se dala i jina hlaska...
 
     auto target_chain = fat_manager.get_cluster_chain(result.target_cluster);
     if (!dir_manager.is_directory_empty(target_chain))
-        return VfsStatus::NOT_EMPTY;
+        return VfsStatus::NOT_EMPTY; // slozka musi byt pred smazanim prazna
 
-    auto parent_chain = fat_manager.get_cluster_chain(result.parent_cluster);
-    dir_manager.remove_item(parent_chain, result.target_name);
-    fat_manager.free_chain(result.target_cluster); // vymazani zaznamu z fat tabulky
+    remove_from_directory(result.parent_cluster, result.target_name); // odstraneni z rodicovskeho adresare
+    fat_manager.free_chain(result.target_cluster);                    // vymazani zaznamu z fat tabulky
     return VfsStatus::OK;
 }
 
 VfsStatus VFS::cd(const std::string &path)
 {
     auto result = resolve_path(path);
-
+    // musi to byt validni cesta k existujicimu adresari
     if (!result.is_valid || !result.is_directory)
         return VfsStatus::PATH_NOT_FOUND;
 
@@ -120,12 +140,14 @@ InfoResult VFS::info(const std::string &path)
     InfoResult result;
 
     auto res_path = resolve_path(path);
+    // musi to byt validni cesta k existujici polozce
     if (!res_path.is_valid || res_path.target_cluster == -1)
     {
         result.status = VfsStatus::FILE_NOT_FOUND;
         return result;
     }
 
+    // specialni pripad pro root, protoze by to zhavarovalo na hledani rodicovskeho retezce
     if (res_path.target_cluster == 0)
     {
         result.status = VfsStatus::OK;

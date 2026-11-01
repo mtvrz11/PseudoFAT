@@ -2,10 +2,9 @@
 #include "./fs/VFS.h"
 
 #include <iostream>
-#include <sstream>
-#include <vector>
 #include <string>
 
+/// @brief vstupni bod aplikace - zalozi VFS a Shell a spusti nacitani prikazu
 int main(int argc, char *argv[])
 {
     if (argc != 2)

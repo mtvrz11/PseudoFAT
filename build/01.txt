@@ -1,0 +1,13 @@
+format 2MB
+pwd
+mkdir a
+mkdir b
+ls
+cd a
+pwd
+mkdir c
+ls
+cd ..
+ls a
+rmdir b
+ls

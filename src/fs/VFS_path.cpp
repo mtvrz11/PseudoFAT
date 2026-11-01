@@ -6,10 +6,11 @@ std::vector<std::string> VFS::split_path(const std::string &path)
     std::vector<std::string> tokens;
     std::string token;
     std::istringstream tokens_stream(path);
+
     while (std::getline(tokens_stream, token, '/'))
     {
         if (token.empty())
-            continue;
+            continue; // prazdne tokeny zpusobene lomitkem na zacatku nebo dvema lomitky za sebou ignoruji
         tokens.push_back(token);
     }
     return tokens;
@@ -37,8 +38,9 @@ PathResult VFS::resolve_path(const std::string &path)
         return result;
     }
 
+    // vybiram podle toho, jestli je to cesta absolutni nebo relativni
     int32_t search_cluster = (path[0] == '/') ? 0 : current_cluster;
-    int32_t parent = search_cluster;
+    int32_t parent = search_cluster; // v dalsi iteraci se to zmeni
     result.target_name = tokens.back();
 
     for (int i = 0; i < tokens.size(); i++)
@@ -76,7 +78,7 @@ PathResult VFS::resolve_path(const std::string &path)
         result.is_directory = item.isDirectory;
     }
 
-    // vsechno dobehlo a existovalo; informaci o tom, zda je cil adresar nebo soubor uz mam z cyklu
+    // vsechno dobehlo a existovalo. informaci o tom, zda je cil adresar nebo soubor uz mam z cyklu
     result.is_valid = true;
     result.parent_cluster = parent;
     result.target_cluster = search_cluster;
@@ -111,6 +113,7 @@ std::string VFS::build_absolute_path(const std::string &path)
     if (stack.empty())
         return "/";
 
+    // sestaveni cesty z tokenu v zasobniku
     std::string result = "";
     for (const auto &dir : stack)
     {
@@ -122,5 +125,5 @@ std::string VFS::build_absolute_path(const std::string &path)
 
 std::string VFS::pwd()
 {
-    return current_path; // ma pwd byt v tomto souboru, nebo treba spis v VSF_dir?
+    return current_path;
 }

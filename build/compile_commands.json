@@ -1,0 +1,62 @@
+[
+{
+  "directory": "/home/mtvrz/Documents/ZOS/PseudoFAT/build",
+  "command": "/usr/bin/g++   -g -std=c++17 -o CMakeFiles/pseudoFAT.dir/src/cli/Shell.cpp.o -c /home/mtvrz/Documents/ZOS/PseudoFAT/src/cli/Shell.cpp",
+  "file": "/home/mtvrz/Documents/ZOS/PseudoFAT/src/cli/Shell.cpp",
+  "output": "CMakeFiles/pseudoFAT.dir/src/cli/Shell.cpp.o"
+},
+{
+  "directory": "/home/mtvrz/Documents/ZOS/PseudoFAT/build",
+  "command": "/usr/bin/g++   -g -std=c++17 -o CMakeFiles/pseudoFAT.dir/src/disk/VirtualDisk.cpp.o -c /home/mtvrz/Documents/ZOS/PseudoFAT/src/disk/VirtualDisk.cpp",
+  "file": "/home/mtvrz/Documents/ZOS/PseudoFAT/src/disk/VirtualDisk.cpp",
+  "output": "CMakeFiles/pseudoFAT.dir/src/disk/VirtualDisk.cpp.o"
+},
+{
+  "directory": "/home/mtvrz/Documents/ZOS/PseudoFAT/build",
+  "command": "/usr/bin/g++   -g -std=c++17 -o CMakeFiles/pseudoFAT.dir/src/fs/DirectoryManager.cpp.o -c /home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/DirectoryManager.cpp",
+  "file": "/home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/DirectoryManager.cpp",
+  "output": "CMakeFiles/pseudoFAT.dir/src/fs/DirectoryManager.cpp.o"
+},
+{
+  "directory": "/home/mtvrz/Documents/ZOS/PseudoFAT/build",
+  "command": "/usr/bin/g++   -g -std=c++17 -o CMakeFiles/pseudoFAT.dir/src/fs/FatManager.cpp.o -c /home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/FatManager.cpp",
+  "file": "/home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/FatManager.cpp",
+  "output": "CMakeFiles/pseudoFAT.dir/src/fs/FatManager.cpp.o"
+},
+{
+  "directory": "/home/mtvrz/Documents/ZOS/PseudoFAT/build",
+  "command": "/usr/bin/g++   -g -std=c++17 -o CMakeFiles/pseudoFAT.dir/src/fs/VFS_boot.cpp.o -c /home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/VFS_boot.cpp",
+  "file": "/home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/VFS_boot.cpp",
+  "output": "CMakeFiles/pseudoFAT.dir/src/fs/VFS_boot.cpp.o"
+},
+{
+  "directory": "/home/mtvrz/Documents/ZOS/PseudoFAT/build",
+  "command": "/usr/bin/g++   -g -std=c++17 -o CMakeFiles/pseudoFAT.dir/src/fs/VFS_check.cpp.o -c /home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/VFS_check.cpp",
+  "file": "/home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/VFS_check.cpp",
+  "output": "CMakeFiles/pseudoFAT.dir/src/fs/VFS_check.cpp.o"
+},
+{
+  "directory": "/home/mtvrz/Documents/ZOS/PseudoFAT/build",
+  "command": "/usr/bin/g++   -g -std=c++17 -o CMakeFiles/pseudoFAT.dir/src/fs/VFS_dir.cpp.o -c /home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/VFS_dir.cpp",
+  "file": "/home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/VFS_dir.cpp",
+  "output": "CMakeFiles/pseudoFAT.dir/src/fs/VFS_dir.cpp.o"
+},
+{
+  "directory": "/home/mtvrz/Documents/ZOS/PseudoFAT/build",
+  "command": "/usr/bin/g++   -g -std=c++17 -o CMakeFiles/pseudoFAT.dir/src/fs/VFS_file.cpp.o -c /home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/VFS_file.cpp",
+  "file": "/home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/VFS_file.cpp",
+  "output": "CMakeFiles/pseudoFAT.dir/src/fs/VFS_file.cpp.o"
+},
+{
+  "directory": "/home/mtvrz/Documents/ZOS/PseudoFAT/build",
+  "command": "/usr/bin/g++   -g -std=c++17 -o CMakeFiles/pseudoFAT.dir/src/fs/VFS_path.cpp.o -c /home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/VFS_path.cpp",
+  "file": "/home/mtvrz/Documents/ZOS/PseudoFAT/src/fs/VFS_path.cpp",
+  "output": "CMakeFiles/pseudoFAT.dir/src/fs/VFS_path.cpp.o"
+},
+{
+  "directory": "/home/mtvrz/Documents/ZOS/PseudoFAT/build",
+  "command": "/usr/bin/g++   -g -std=c++17 -o CMakeFiles/pseudoFAT.dir/src/main.cpp.o -c /home/mtvrz/Documents/ZOS/PseudoFAT/src/main.cpp",
+  "file": "/home/mtvrz/Documents/ZOS/PseudoFAT/src/main.cpp",
+  "output": "CMakeFiles/pseudoFAT.dir/src/main.cpp.o"
+}
+]

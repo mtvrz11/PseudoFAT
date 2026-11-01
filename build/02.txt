@@ -1,0 +1,13 @@
+format 2MB
+mkdir slozka
+incp host_in.txt slozka/soubor.txt
+ls slozka
+cat slozka/soubor.txt
+cp slozka/soubor.txt kopie.txt
+ls
+mv kopie.txt slozka/presunuto.txt
+ls slozka
+rm slozka/soubor.txt
+ls slozka
+outcp slozka/presunuto.txt host_out.txt
+info slozka/presunuto.txt

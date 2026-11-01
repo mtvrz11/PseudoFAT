@@ -209,6 +209,7 @@ void Shell::execute_line(const std::string &line)
     std::string cmd;
     ss >> cmd;
 
+    // exit muze byt nacten kdykoliv a zpusobi ukonceni programu
     if (cmd == "exit")
     {
         is_running = false;
@@ -216,12 +217,14 @@ void Shell::execute_line(const std::string &line)
     }
 
     auto it = commands.find(cmd);
-    if (it == commands.end())
+    if (it == commands.end()) // prikaz nenalezen v mape
     {
         std::cout << "INVALID COMMAND" << std::endl;
         return;
     }
 
+    // jeste nebyl naformatovany disk
+    // load muze byt nacteno pred naformatovanim, protoze muze prikazem format teoreticky zacinat
     if (cmd != "format" && cmd != "load" && !fs.is_ready())
     {
         print_status(VfsStatus::DISK_NOT_FORMATTED);
@@ -236,9 +239,9 @@ void Shell::execute_line(const std::string &line)
     {
         std::cout << "HARDWARE DISK ERROR: " << e.what() << std::endl;
     }
-    catch (const std::exception &e)
+    catch (const std::exception &e) // jakakoliv jina vyjimka vyhazovana funkcemi ze standardni knihovny
     {
-        std::cout << "FATA ERROR: " << e.what() << std::endl;
+        std::cout << "FATAL ERROR: " << e.what() << std::endl;
     }
 }
 

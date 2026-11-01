@@ -4,6 +4,7 @@
 
 VfsStatus VFS::bug(const std::string &path, BugType type)
 {
+    // musi to byt validni cesta k existujicimu souboru
     auto result = resolve_path(path);
     if (!result.is_valid || result.target_cluster == -1 || result.is_directory)
         return VfsStatus::FILE_NOT_FOUND;
@@ -22,7 +23,7 @@ VfsStatus VFS::bug(const std::string &path, BugType type)
     else if (type == BugType::CYCLE)
     {
         if (target_chain.size() >= 1)
-            fat_manager.corrupt_fat_entry(target_chain.back(), target_chain.front());
+            fat_manager.corrupt_fat_entry(target_chain.back(), target_chain.front()); // vytvoreni cyklu
     }
     else if (type == BugType::OUT_OF_RANGE)
     {
@@ -43,23 +44,26 @@ CheckResult VFS::check()
         dirs_to_visit.pop_back();
 
         if (visited_dirs.count(current_dir))
-            continue;
+            continue; // pokud byl jiz obslouzen, znovu ho neresim
         visited_dirs.insert(current_dir);
 
         auto chain = fat_manager.get_cluster_chain(current_dir);
 
+        // procazim adresar cluster po clusteru
         for (int32_t cluster : chain)
         {
+            // kazdy cluster polozku po polozce
             auto items = dir_manager.get_directory_content(cluster);
             for (const auto &item : items)
             {
-                if (item.item_name[0] == '\0')
+                if (item.item_name[0] == '\0') // prazdna polozka
                     continue;
 
-                std::string name(item.item_name);
+                std::string name(item.item_name); // rodicovsky adresar a aktualni adresar muzu ignorovat, protoze uz musi byt ve vektoru ke zpracovani
                 if (name == "." || name == "..")
                     continue;
 
+                // nastaveni spolecneho popisu chyby
                 CheckItem bug;
                 bug.is_directory = item.isDirectory;
                 bug.name = name;
@@ -67,8 +71,9 @@ CheckResult VFS::check()
                 int32_t curr_cluster = item.start_cluster;
                 std::unordered_set<int32_t> seen_clusters;
                 bool bug_detected = false;
-                size_t chain_length = 0;
+                size_t chain_length = 0; // skutecna delka retezce pro kontrolu odpovidajici velikosti s adresarovou polozkou
 
+                // prochazim polozku cluster po clusteru
                 while (curr_cluster != FAT_FILE_END && curr_cluster != FAT_UNUSED)
                 {
                     if (curr_cluster < 0 || curr_cluster >= fat_manager.get_fat_size())
@@ -103,7 +108,7 @@ CheckResult VFS::check()
                     }
                 }
 
-                // pokud to je bezchybny adresar, pridam ho do seznamu na zkontrolovani
+                // pokud to je bezchybny adresar, pridam ho do seznamu na zkontrolovani jeho polozek
                 if (!bug_detected && item.isDirectory)
                     dirs_to_visit.push_back(item.start_cluster);
 

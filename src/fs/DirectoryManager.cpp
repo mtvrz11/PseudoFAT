@@ -41,6 +41,7 @@ bool DirectoryManager::add_item(int32_t parent_cluster, const std::string &name,
         }
     }
 
+    // nebyl nalezen zadny volny cluster
     if (free_slot == -1)
         return false;
 
@@ -57,7 +58,7 @@ bool DirectoryManager::add_item(int32_t parent_cluster, const std::string &name,
     return true;
 }
 
-void DirectoryManager::remove_item(const std::vector<int32_t> &parent_chain, std::string &name)
+void DirectoryManager::remove_item(const std::vector<int32_t> &parent_chain, const std::string &name)
 {
     for (int32_t cluster : parent_chain)
     {

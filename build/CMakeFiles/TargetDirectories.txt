@@ -1,0 +1,3 @@
+/home/mtvrz/Documents/ZOS/PseudoFAT/build/CMakeFiles/pseudoFAT.dir
+/home/mtvrz/Documents/ZOS/PseudoFAT/build/CMakeFiles/edit_cache.dir
+/home/mtvrz/Documents/ZOS/PseudoFAT/build/CMakeFiles/rebuild_cache.dir

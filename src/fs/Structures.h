@@ -11,7 +11,7 @@ constexpr int32_t CLUSTER_SIZE = 1024;
 
 struct description
 {
-    char signature[9];          // identifikace VFS, u nas login autora
+    char signature[6];          // identifikace VFS, u nas login autora
     int32_t disk_size;          // celkova velikost VFS v bytech
     int32_t cluster_size;       // velikost clusteru v bytech
     int32_t cluster_count;      // pocet clusteru v datove oblasti
