@@ -9,8 +9,6 @@ VirtualDisk::VirtualDisk(const std::string &filename)
 {
     if (file.is_open())
         is_open = true;
-    else
-        throw DiskException("Virtual disk file is not open.");
 }
 
 void VirtualDisk::create_empty(int32_t total_bytes)
