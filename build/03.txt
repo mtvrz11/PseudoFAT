@@ -1,8 +1,0 @@
-format 2MB
-incp host_in.txt test1.txt
-incp host_in.txt test2.txt
-incp host_in.txt test3.txt
-bug test1.txt 1
-bug test2.txt 2
-bug test3.txt 3
-check

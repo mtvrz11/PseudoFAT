@@ -1,3 +1,0 @@
-Ahoj, toto je testovaci soubor pro incp a outcp.
-Obsahuje par radku textu.
-Konec.
