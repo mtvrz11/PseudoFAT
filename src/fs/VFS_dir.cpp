@@ -114,6 +114,10 @@ VfsStatus VFS::rmdir(const std::string &path)
     if (result.target_cluster == 0 || result.target_cluster == current_cluster)
         return VfsStatus::PATH_NOT_FOUND; // TODO: mozna by se dala i jina hlaska...
 
+    // nesmim smazat ani odkazy na rodice a na sebe sama
+    if (result.target_name == "." || result.target_name == "..")
+        return VfsStatus::PATH_NOT_FOUND;
+
     auto target_chain = fat_manager.get_cluster_chain(result.target_cluster);
     if (!dir_manager.is_directory_empty(target_chain))
         return VfsStatus::NOT_EMPTY; // slozka musi byt pred smazanim prazna
