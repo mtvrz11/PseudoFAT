@@ -114,7 +114,7 @@ VfsStatus VFS::rmdir(const std::string &path)
     if (result.target_cluster == 0 || result.target_cluster == current_cluster)
         return VfsStatus::PATH_NOT_FOUND; // TODO: mozna by se dala i jina hlaska...
 
-    // nesmim smazat ani odkazy na rodice a na sebe sama
+    // nesmim smazat ani odkazy na rodice a na sebe sama z jineho umisteni! Neni to same jako predchozi podminka
     if (result.target_name == "." || result.target_name == "..")
         return VfsStatus::PATH_NOT_FOUND;
 
